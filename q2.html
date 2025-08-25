@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+.input-container {
+  position: relative;
+  width: 300px;
+}
+
+.hidden-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.visual-input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  min-height: 20px;
+  background: white;
+  cursor: text;
+}
+
+.fade-char {
+  display: inline-block;
+  opacity: 0;
+  animation: charAppear 0.3s ease forwards;
+}
+
+@keyframes charAppear {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 18px;
+  background: #007bff;
+  animation: blink 1s infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+</style>
+</head>
+<body>
+  <div class="input-container">
+  <input type="text" id="advancedFadeInput" class="hidden-input">
+  <div id="visualInput" class="visual-input" contenteditable="true"></div>
+</div>
+
+
+
+<script>
+class AdvancedFadeInput {
+  constructor(hiddenInputId, visualInputId) {
+    this.hiddenInput = document.getElementById(hiddenInputId);
+    this.visualInput = document.getElementById(visualInputId);
+    this.previousValue = '';
+    
+    this.setupEvents();
+    this.setupCursor();
+  }
+
+  setupEvents() {
+    this.visualInput.addEventListener('input', this.handleVisualInput.bind(this));
+    this.visualInput.addEventListener('keydown', this.handleKeydown.bind(this));
+    this.visualInput.addEventListener('click', this.focus.bind(this));
+    
+    // Синхронизация со скрытым input
+    this.visualInput.addEventListener('input', () => {
+      this.hiddenInput.value = this.getTextContent();
+    });
+  }
+
+  setupCursor() {
+    this.cursor = document.createElement('span');
+    this.cursor.className = 'cursor';
+    this.visualInput.appendChild(this.cursor);
+  }
+
+  handleVisualInput(e) {
+    const currentText = this.getTextContent();
+    
+    if (currentText.length > this.previousValue.length) {
+      this.animateNewCharacters(currentText);
+    }
+    
+    this.previousValue = currentText;
+    this.updateCursor();
+  }
+
+  handleKeydown(e) {
+    if (e.key === 'Backspace') {
+      this.previousValue = this.getTextContent();
+    }
+  }
+
+  getTextContent() {
+    return this.visualInput.textContent.replace(/\u200B/g, ''); // Удаляем нулевые символы
+  }
+
+  animateNewCharacters(currentText) {
+    const newChar = currentText.slice(-1);
+    
+    // Заменяем последний символ на анимированную версию
+    this.visualInput.innerHTML = this.visualInput.innerHTML
+      .replace(/<[^>]*>/g, '') // Убираем предыдущие HTML
+      .slice(0, -1) + 
+      `<span class="fade-char">${newChar}</span>`;
+    
+    this.updateCursor();
+  }
+
+  updateCursor() {
+    this.cursor.style.display = 'inline-block';
+  }
+
+  focus() {
+    this.visualInput.focus();
+  }
+}
+
+// Инициализация
+new AdvancedFadeInput('advancedFadeInput', 'visualInput');
+</script>
+</body>
+</html>
